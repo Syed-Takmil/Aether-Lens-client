@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { authClient } from '@/app/lib/auth-client';
 import { toast } from 'react-toastify';
 import Image from 'next/image';
+import NavLink from './NavLink';
 
 export default function Navbar() {
   const router = useRouter();
@@ -44,11 +45,11 @@ export default function Navbar() {
 
         {/* Desktop Navigation Links */}
         <div className="hidden md:flex gap-6 text-sm font-medium items-center text-gray-600">
-          <Link href="/" className="hover:text-teal-700 transition">Home</Link>
-          <Link href="/explore" className="hover:text-teal-700 transition">Explore Index</Link>
-          <Link href="/about" className="hover:text-teal-700 transition">About</Link>
-          <Link href="/contact" className="hover:text-teal-700 transition">Contact</Link>
-          
+          <NavLink href="/" >Home</NavLink>
+          <NavLink href="/explore" >Explore Index</NavLink>
+          <NavLink href="/about" >About</NavLink>
+          <NavLink href="/contact" >Contact</NavLink>
+
           {!session ? (
             <>
               <div className="h-4 w-[1px] bg-gray-200 mx-1" />
@@ -59,12 +60,12 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              <Link href="/items/add" className="hover:text-teal-700 transition flex items-center gap-1">
+              <NavLink href="/items/add">
                 ➕ Add Supplier
-              </Link>
-              <Link href="/items/manage" className="hover:text-teal-700 transition flex items-center gap-1">
+              </NavLink>
+              <NavLink href="/items/manage">
                 ⚙️ Manage Suppliers
-              </Link>
+              </NavLink>
               
               <div className="h-4 w-[1px] bg-gray-200 mx-2" />
 
