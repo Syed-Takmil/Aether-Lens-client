@@ -1,14 +1,18 @@
 'use client';
 
 import React, { useState } from 'react';
+import { authClient } from '@/app/lib/auth-client'; // 👈 Import auth client
+import { toast } from 'react-toastify';
 
 export default function AddSupplierPage() {
+  const { data: session } = authClient.useSession(); // 👈 Get current session
+
   // Store form inputs in state
   const [title, setTitle] = useState('');
   const [shortDescription, setShortDescription] = useState('');
   const [fullDescription, setFullDescription] = useState('');
   const [riskRating, setRiskRating] = useState('1');
-  const [location, setLocation] = useState(''); // New input state
+  const [location, setLocation] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   
   // AI Feature States (Requirement 11-E)
@@ -19,7 +23,7 @@ export default function AddSupplierPage() {
   // Requirement 11-E: Call AI Auto-Classification Engine
   const handleAutoClassify = async () => {
     if (!fullDescription || fullDescription.length < 15) {
-      alert('Please write a bit more in the Full Detailed Analysis section so the AI has context to read.');
+      toast.error('Please write a bit more in the Full Detailed Analysis section so the AI has context to read.');
       return;
     }
     setClassifying(true);
@@ -35,7 +39,7 @@ export default function AddSupplierPage() {
       if (data.suggestedCategory) setCategory(data.suggestedCategory);
       if (data.generatedTags) setTags(data.generatedTags);
     } catch (err) {
-      alert('Could not establish contact with the AI classification node.');
+      toast.error('Could not establish contact with the AI classification node.');
     } finally {
       setClassifying(false);
     }
@@ -44,14 +48,20 @@ export default function AddSupplierPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!session?.user?.email) {
+      toast.success('Authentication required: Please log in to submit a supplier profile.');
+      return;
+    }
+
     const payload = {
       title,
       shortDescription,
       fullDescription,
-      category, // Now dynamic from the AI selector
+      category,
       riskRating: parseInt(riskRating),
       location: location || "Global Grid",
-      imageUrl
+      imageUrl,
+      userEmail: session.user.email // 👈 Passed so backend can lookup DB user ObjectId
     };
 
     try {
@@ -62,7 +72,7 @@ export default function AddSupplierPage() {
       });
 
       if (response.ok) {
-        alert(`Profile successfully deployed to system cluster: ${title}`);
+        toast.success(`Profile successfully deployed to system cluster: ${title}`);
         setTitle('');
         setShortDescription('');
         setFullDescription('');
@@ -71,7 +81,7 @@ export default function AddSupplierPage() {
         setTags([]);
         setCategory('Electronics');
       } else {
-        alert('Failed to transmit records to core pipeline.');
+        toast.error('Failed to transmit records to core pipeline.');
       }
     } catch (err) {
       console.error('Network failure connecting to data node:', err);
@@ -131,7 +141,6 @@ export default function AddSupplierPage() {
             onChange={(e) => setFullDescription(e.target.value)}
           />
           
-          {/* REQUIREMENT 11-E: AI Engine Interaction Row */}
           <div className="mt-2 p-3 bg-slate-900 text-white rounded-md flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
             <div className="text-xs">
               <span className="block font-bold text-emerald-400">🪄 AI Classification Assistant</span>
@@ -148,7 +157,6 @@ export default function AddSupplierPage() {
           </div>
         </div>
 
-        {/* AI Output Fields Box (User can review and tweak the category choices manually) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-dashed">
           <div>
             <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Operational Category</label>
@@ -210,7 +218,7 @@ export default function AddSupplierPage() {
           type="submit" 
           className="w-full bg-teal-700 text-white font-medium p-2.5 rounded-md hover:bg-teal-800 transition shadow-sm"
         >
-          Deploy Profile to Database
+          Add Supplier
         </button>
       </form>
     </div>
