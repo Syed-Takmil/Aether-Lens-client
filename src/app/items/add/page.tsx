@@ -25,7 +25,7 @@ export default function AddSupplierPage() {
     setClassifying(true);
 
     try {
-      const res = await fetch('http://localhost:5000/api/agent/auto-classify', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/agent/auto-classify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fullDescription }),
@@ -55,7 +55,7 @@ export default function AddSupplierPage() {
     };
 
     try {
-      const response = await fetch('http://localhost:5000/api/suppliers/add', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/suppliers/add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

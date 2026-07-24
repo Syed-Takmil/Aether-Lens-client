@@ -30,7 +30,7 @@ export default function SupplierDetailsPage({ params }: { params: Promise<{ id: 
 
   // Fetch real supplier info from MongoDB on mount
   useEffect(() => {
-    fetch(`http://localhost:5000/api/suppliers/${targetId}`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/suppliers/${targetId}`)
       .then((res) => {
         if (!res.ok) throw new Error('Could not retrieve supplier records from backend.');
         return res.json();
@@ -60,7 +60,7 @@ export default function SupplierDetailsPage({ params }: { params: Promise<{ id: 
     };
 
     try {
-      const response = await fetch('http://localhost:5000/api/agent/analyze-telemetry', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/agent/analyze-telemetry`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ dataPayload: telemetryPayload }),

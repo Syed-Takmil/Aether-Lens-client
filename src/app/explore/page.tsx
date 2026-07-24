@@ -24,7 +24,7 @@ export default function ExplorePage() {
 
   // Fetch real data from your Node server engine
   useEffect(() => {
-    fetch('http://localhost:5000/api/suppliers')
+    fetch("https://aether-lens-server.vercel.app/api/suppliers")
       .then((res) => {
         if (!res.ok) throw new Error('Network configuration discrepancy detected.');
         return res.json();
