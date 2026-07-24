@@ -22,6 +22,10 @@ export default function ExplorePage() {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [riskFilter, setRiskFilter] = useState('');
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const itemsPerPage = 8;
+
   // Fetch real data from your Node server engine
   useEffect(() => {
     fetch("https://aether-lens-server.vercel.app/api/suppliers")
@@ -39,6 +43,7 @@ export default function ExplorePage() {
       });
   }, []);
 
+  // Filter items based on search & selectors
   const filteredItems = items.filter(item => {
     const matchesSearch = item.title.toLowerCase().includes(search.toLowerCase()) || 
                           item.shortDescription.toLowerCase().includes(search.toLowerCase());
@@ -46,6 +51,16 @@ export default function ExplorePage() {
     const matchesRisk = riskFilter === '' || item.riskRating.toString() === riskFilter;
     return matchesSearch && matchesCategory && matchesRisk;
   });
+
+  // Reset to page 1 whenever filters or search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, categoryFilter, riskFilter]);
+
+  // Calculate pagination boundaries
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentItems = filteredItems.slice(startIndex, startIndex + itemsPerPage);
 
   return (
     <div className="min-h-screen bg-slate-50 p-8 text-slate-800">
@@ -85,7 +100,7 @@ export default function ExplorePage() {
 
         {error && <div className="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">{error}</div>}
 
-        {/* REQUIREMENT 4: Card Grid View with Skeleton Loading fallback */}
+        {/* Card Grid View with Skeleton Loading fallback */}
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map((n) => (
@@ -97,38 +112,63 @@ export default function ExplorePage() {
               </div>
             ))}
           </div>
-        ) : items.length === 0 ? (
+        ) : filteredItems.length === 0 ? (
           <div className="text-center py-12 text-gray-500 bg-white rounded-xl border border-dashed">
-            No supplier profiles found in database. Use /items/add to register one.
+            No supplier profiles found matching criteria. Use /items/add to register one.
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {filteredItems.map(item => (
-              <div key={item._id} className="bg-white rounded-xl overflow-hidden border flex flex-col justify-between shadow-sm transition hover:shadow-md h-96">
-                <div>
-                  <img 
-                    src={item.imageUrl || 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=400&q=80'} 
-                    alt={item.title} 
-                    className="w-full h-40 object-cover" 
-                  />
-                  <div className="p-4">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-teal-700">{item.category}</span>
-                    <h3 className="text-base font-bold mt-1 text-slate-900 truncate">{item.title}</h3>
-                    <p className="text-xs text-gray-500 line-clamp-2 mt-1">{item.shortDescription}</p>
-                    <div className="mt-3 text-xs space-y-1 text-gray-600 border-t pt-2">
-                      <div>📍 Base: **{item.location}**</div>
-                      <div>⚠️ Risk Score: <span className="font-bold text-amber-600">{item.riskRating}/5</span></div>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {currentItems.map(item => (
+                <div key={item._id} className="bg-white rounded-xl overflow-hidden border flex flex-col justify-between shadow-sm transition hover:shadow-md h-96">
+                  <div>
+                    <img 
+                      src={item.imageUrl || 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=400&q=80'} 
+                      alt={item.title} 
+                      className="w-full h-40 object-cover" 
+                    />
+                    <div className="p-4">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-teal-700">{item.category}</span>
+                      <h3 className="text-base font-bold mt-1 text-slate-900 truncate">{item.title}</h3>
+                      <p className="text-xs text-gray-500 line-clamp-2 mt-1">{item.shortDescription}</p>
+                      <div className="mt-3 text-xs space-y-1 text-gray-600 border-t pt-2">
+                        <div>📍 Base: **{item.location}**</div>
+                        <div>⚠️ Risk Score: <span className="font-bold text-amber-600">{item.riskRating}/5</span></div>
+                      </div>
                     </div>
                   </div>
+                  <div className="p-4 pt-0">
+                    <Link href={`/details/${item._id}`} className="block text-center text-xs font-medium bg-slate-900 text-white py-2 rounded-md hover:bg-slate-800 transition">
+                      View Details
+                    </Link>
+                  </div>
                 </div>
-                <div className="p-4 pt-0">
-                  <Link href={`/details/${item._id}`} className="block text-center text-xs font-medium bg-slate-900 text-white py-2 rounded-md hover:bg-slate-800 transition">
-                    View Details
-                  </Link>
-                </div>
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-8">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 text-xs font-semibold bg-white border rounded-md shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition"
+                >
+                  Previous
+                </button>
+                <span className="text-xs text-gray-600 font-medium px-2">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 text-xs font-semibold bg-white border rounded-md shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition"
+                >
+                  Next
+                </button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
     </div>
